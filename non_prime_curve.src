@@ -8,4 +8,5 @@ def non_prime_curve(i, A,  B):
         F = GF(p)
         E = EllipticCurve(F, [A, B])
         card = E.cardinality()
-    return [p, E]    
+    return [p, E]
+    
