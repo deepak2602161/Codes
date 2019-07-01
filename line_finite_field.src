@@ -1,0 +1,27 @@
+def line_finite_field(N, m, c, P, R):
+    p = next_prime(N)
+    F = GF(p)
+    l = line([])
+    l1 = ([])
+    x = F(P[0])
+    y = F(P[1])
+    x1 = F(x + 1)
+    y1 = F(m*x1 + c)
+    l = l + line([[x, y],[x1, y1]], color = 'red')
+    l1 = l1 + [((x, y), (x1, y1))]
+    t = text('(%d, %d)'%(x, y), (x, y), horizontal_alignment = "left", color = 'black')
+    t = t + text("1", (x1, y1), horizontal_alignment = "left", color = 'black')
+    if (x1, y1) == R:
+       return [l ,l1]
+    else:
+        for i in range(1, p):
+            x = x1
+            y = y1
+            x1 = F(x + 1)
+            y1 = F(m*x1 + c)
+            l = l + line([[x, y],[x1, y1]])
+            l1 = l1 + [((x, y), (x1, y1))]
+            t = t + text('%s'%(i+1), (x1, y1), horizontal_alignment = "left", color = 'black')
+            if (x1 , y1) == R:
+                break 
+        return [l, l1, t]
