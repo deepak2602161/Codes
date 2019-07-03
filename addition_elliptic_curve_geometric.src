@@ -61,8 +61,4 @@ else:
     output =  sol  
 
 M = E.plot(color = 'black') + l
-M.save("filename.png")
-print(output)
-P = (P[0], P[1])
-Q = (Q[0], Q[1])
-print(E(P)+E(Q))
+M.show()
