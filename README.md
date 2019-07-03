@@ -17,14 +17,26 @@ o(g) = n, and q is any arbitrary element and j is the discrete log base g. This 
 space for the brute force in case q is not a generator, which can be a case if the n is not prime. This code will work only if 
 the element q is not the generator, otherwise there is not point of this code.
 
-4. zero_multi_system.sage:
+4. line_finite_field.src:
+This code contains a function which has arguments (N, m, c, P, R).
+N: size of the characteristic of the finite field,
+m: slope of the line,
+c: y-intercept of the line,
+P: starting point of the line,
+R. end point of the line.
+
+5. summation_polynomial.src:
+Input: field, parameters of the elliptic curve, and the index(k) for the summation polynomial, k>2.
+Ouput: Sk
+
+6. zero_multi_system.sage:
 Input format: this code will take the field, and the system of 'n' multivariate polynomial equations in n variables.
 Output: corresponding affine variety of the above given ideal.
 This code is written to solve system of multivariate polynomial equations for the zero dimensional ideal only, but works for 
 any field.
 
-5. solve_system_multi_equation.sage:
+7. solve_system_multi_equation.sage:
 This code will work for finite field only but for any ideal. Word is under progress.
 
-6. dlog_gaudry1.src:
+8. dlog_gaudry1.src:
 This code is written to solve the discrete log problem as promised above. Work is under progress.
