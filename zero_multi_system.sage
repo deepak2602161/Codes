@@ -21,7 +21,6 @@ def check_system(S, R):
     I = R.ideal(S)
     G = I.groebner_basis()
     if 1 in G:
-        print("corresponding variety is empty.")
         return 0
     for i in t:
         count = 0
@@ -31,7 +30,6 @@ def check_system(S, R):
                 count += 1
         print(i, count)
         if count == 0:
-            print("system is underdetermined and hence the ideal is not zero dimensional(infinite solution in case of infinite field).")
             return 1
     return R.ideal(S)
 
@@ -44,14 +42,15 @@ def solve_groebner_basis(S, R):
     I = check_system(S, R)
     if I == 1:
         print("system is underdetermined and hence the ideal is not zero dimensional(infinite solution in case of infinite field).")
-        return 1
+        return [1]
     elif I == 0:
         print("corresponding variety is empty.")
-        return 0    
+        return [0]    
     basis = I.groebner_basis()
     # print(basis)
     J = elimination_ideal(basis, R, n-1)
     R1.<X> = F[]
+    t[:(n-1)] = [0]*(n-1)
     t[-1] = X
     f = J[-1](t)    
     roots = [[y[0]] for y in f.roots()]
@@ -67,6 +66,7 @@ def solve_groebner_basis(S, R):
             l = []
             for k in J:
                 t1 = list(x)
+                t1[:i] = [0]*i
                 t1[i] = X 
                 t1[i+1:] = j 
                 l += [k(t1)]
@@ -82,13 +82,13 @@ def solve_groebner_basis(S, R):
         # print(solution)
     return solution  
 
-#F = F_{q^n2}, q = p^n1.    
+#F = F_{q^n2}, q = p^n1(Finite Field) or number field or complex field.    
 n1 = input("insert the degree of the extension field.")
 n2 = input("insert the degree of the extension of the base field.")
 p = input("insert the characteristic of the base field.")
 m = input("number of variables in the polynomial ring.")
 if p == 0:
-    field = input("rational field or complex field(write either rational or complex).")
+    field = input("rational field or complex field. input format = 'rational' or 'complex').")
     if field == "rational":
         if (n2 > 1) and (n1 > 1):
             modulus = input("insert the modulus of the base number field.")
@@ -114,22 +114,8 @@ else:
     a = Fn.gens()[0]
     a2 = F.gens()[0]
 
-R = PolynomialRing(F, 'x', m, order = 'lex')
-# print(R.gens())
-x = list(R.gens())  
-S = [x[1] - x[0] - 1, x[1] - x[0] - 1]
-# [3*x0**2 + 2*x1*x2 - 2*x0*x3, 2*x0*x2 - 2*x1*x3, 2*x0**2 - 2*x2 - 2*x2*x3, x0**2 + x1**2 + x2**2 - 1]
-#input("system of multivariate polynomials to be solved.")
+R = PolynomialRing(F, 'x', m, order = 'lex')  
+S = input("insert system of 'n' multivariate polynomials to be solved. input format = [f1(x[0], x[1], ..., x[n-1]), ..., fn(x[0], x[1], ..., x[n-1])]")   
 solution = solve_groebner_basis(S, R)
 print(len(solution))
 print(solution)
-# sol = []
-# for s in solution:
-#     count = 0
-#     for f in S:
-#         if f(s) == 0:
-#             count += 1
-#     if count == len(S):
-#         sol += [s]
-# print(len(sol))           
-#S = [3*x0**2 + 2*x1*x2 - 2*x0*x3, 2*x0*x2 - 2*x1*x3, 2*x0**2 - 2*x2 - 2*x2*x3, x0**2 + x1**2 + x2**2 - 1]
