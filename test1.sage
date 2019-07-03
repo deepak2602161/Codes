@@ -23,17 +23,27 @@ def solve_groebner_basis(S, R):
     basis = I.groebner_basis()
     # print(basis)
     print time.time()
+    z = n-1
     J = elimination_ideal(basis, R, n-1)
+    while J == []:
+        z = z-1
+        J = elimination_ideal(basis, R, z)
     R1.<X> = F[]
-    t[-1] = X
-    f = J[0](t)
+    if J[-1].is_univariate() != 1:
+        print("Can't solve using this method.")
+        return solution
+    t[z] = X
+    f = J[-1](t)
     if f in F.base_ring():
+        return solution
+    elif f.is_univariate() != 1:
+        print("Can't solve using this method.")
         return solution
     else:    
         roots = [[y[0]] for y in f.roots()]
         solution += roots
         # print(solution)
-        for i in range(n-1)[::-1]:
+        for i in range(z)[::-1]:
             J = elimination_ideal(basis, R, i)
             # print(J)
             solution1 = []
