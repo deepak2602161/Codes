@@ -1,4 +1,16 @@
 import time
+from sage.rings.polynomial.polydict import PolyDict
+
+def dict_to_poly(rep, R):
+    x = R.gens()
+    f = 0
+    for t in rep:
+        g = 1
+        for j in range(len(t)-1):
+            g = g*(x[j]**t[j])
+        g = g*t[-1]
+        f += g
+    return f
 def curve(i, n, A,  B):
     p = next_prime(i)
     F = GF(p^4, 'a')
@@ -94,30 +106,82 @@ def summation_poly(k, R, A, B):
 def elimination_ideal(G, R, i):
     G1 = []
     for j in range(len(G)):
+        count = 0
         for k in range(i):
-            count = 0
             if G[j].degree(R.gens()[k]) >= 1:
                 break
             else:
                 count += 1
         if count == i:
             G1 = G1 + [G[j]]
-    return G1        
+    return G1   
 
-def solve_grobner_basis(I, R):
-    n = len(R.gens())
+def solve_groebner_basis(S, R):
     solution = []
-    print time.time()
+    n = len(R.gens())
+    x = R.gens()
+    t = list(x)
+    F = R.base_ring()
+    a = F.gens()[0]
+    R1.<X> = F[]
+    I = R.ideal(S)
     basis = I.groebner_basis()
     print(basis)
-    print time.time()
-    elim_ideal = []
-    elim_ideal += [elimination_ideal(basis, R, n-1)]
-    # print(elim_ideal)
-    # for i in range(n)[::-1]:
-
-
-    # return solution
+    if 1 in basis:
+        return solution
+    else:    
+        J = elimination_ideal(basis, R, n-1)
+        print(J)
+        if J == []:
+            s = (F.characteristic())**(F.degree())
+            if F.degree() == 1:
+                solution = [[i*a] for i in range(s)]
+            else:
+                solution = [[0]] + [[a**i] for i in range(s-1)]        
+            print(solution)
+        else:
+            t[:(n-1)] = [0]*(n-1)
+            t[-1] = X
+            f = J[0](t)    
+            roots = [[y[0]] for y in f.roots()]
+            solution += roots
+            print(solution)
+        for i in range(n-1)[::-1]:
+            if solution == []:
+                return solution
+                break
+            K = elimination_ideal(basis, R, i+1)
+            J = elimination_ideal(basis, R, i)
+            # print(J)
+            solution1 = []
+            if J == K:
+                for j in solution:
+                    solution1 = [[0] + j] + [[a**i] + j for i in range(s-1)]
+            else:        
+                for j in solution:
+                    l = []
+                    for k in J:
+                        t1 = list(x)
+                        t1[:i] = [0]*i
+                        t1[i] = X 
+                        t1[i+1:] = j 
+                        l += [k(t1)]
+                    # print(l)
+                    I1 = R1.ideal(l)
+                    g = I1.groebner_basis()[0]
+                    # print(g)
+                    if g == 1:
+                        break        
+                    elif g.roots() == []:
+                        break
+                    else:    
+                        roots = [[y[0]] for y in g.roots()]
+                        for s in roots:
+                            solution1 += [s + j]
+                            # print(solution1)
+            solution = solution1
+            # print(solution)
+    return solution      
 
 def factor_base(F, A, B):
     E = EllipticCurve(F, [A, B])
@@ -148,11 +212,17 @@ def relations(P, Q, F, k, A, B):
 
 
 
-
-n = input("insert the degree of the extension field")
+#F = F_{q^n2}, q = p^n1(Finite Field) or number field or complex field.    
+n1 = input("insert the degree of the extension field.")
+n2 = input("insert the degree of the extension of the base field.")
 N = input("insert the size of the prime.")
 A, B = input("insert the parameters of required elliptic curve.")
+n = input("number of variables in the polynomial ring.")
 [p, E, F] = curve(N, n, A, B)
+Fn = GF(p^n2, 'a')
+F = Fn.extension(n1, 'a2')
+R = PolynomialRing(F, 'x', n, order = 'lex') 
+x = list(R.gens()) 
 a = F.gens()[0]
 R1 = PolynomialRing(F, 'x', 3, order = 'lex')
 P = (21*a^3 + 73*a^2 + 19*a + 24, 55*a^3 + 48*a^2 + 77*a + 82)
