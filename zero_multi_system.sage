@@ -109,13 +109,15 @@ if p == 0:
     else:
         F = CC
 else:
-    Fn = GF(p^n1, 'a')
-    F, f = Fn.extension(n2, 'a2', map = True)
-    a = Fn.gens()[0]
-    a2 = F.gens()[0]
+    Fn = GF(p^n2, 'a')
+    F = Fn.extension(n1, 'a2')
 
 R = PolynomialRing(F, 'x', m, order = 'lex')  
-S = input("insert system of 'n' multivariate polynomials to be solved. input format = [f1(x[0], x[1], ..., x[n-1]), ..., fn(x[0], x[1], ..., x[n-1])]")   
+S1 = input("insert system of multivariate polynomials to be solved. input format = [[[a_11, a_12, ..., a_1n, c_1], ..., [a_n1, a_n2, ..., a_nn, c_n]], ...,], so f_1(X) = c_1*x^alpha_1, ..., c_n*x^alpha_n, where alpha_i = (a_i1, ..., a_in)")   
+S = []
+for rep in S1:
+    f = dict_to_poly(rep, R)
+    S += [f]  
 solution = solve_groebner_basis(S, R)
 print(len(solution))
 print(solution)
