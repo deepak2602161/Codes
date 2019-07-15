@@ -1,6 +1,37 @@
 import time
 from sage.rings.polynomial.polydict import PolyDict
 
+def elementary_symmetric_polynomials(n, R):
+    F = R.base_ring()
+    x = list(R.gens())
+    e = (n+1)*[0]
+    l = monomials(x, n*[2])
+    l_degree = [y.degree() for y in l]
+    for t in l:
+        t_degree = t.degree()
+        e[t_degree] += t     
+    return e
+
+def conversion_to_esp(f, R):
+    n = len(R.gens())
+    x = list(R.gens())
+    e = elementary_symmetric_polynomials(n, R)
+    g = 0
+    h = f
+    while h != 0:
+        m = h.lm()
+        m_exp = m.exponents()[0]
+        t1 = h.lc()
+        t2 = h.lc()   
+        for j in range(n-1):
+            t1 = t1*(x[j]**(m_exp[j] - m_exp[j+1]))
+            t2 = t2*(e[j+1]**(m_exp[j] - m_exp[j+1]))
+        t1 = t1*(x[n-1]**(m_exp[n-1]))
+        t2 = t2*(e[n]**(m_exp[n-1]))
+        g += t1
+        h = h - t2  
+    return g 
+
 def dict_to_poly(rep, R):
     x = R.gens()
     f = 0
@@ -11,9 +42,10 @@ def dict_to_poly(rep, R):
         g = g*t[-1]
         f += g
     return f
-def curve(i, n, A,  B):
+def curve(i, n1, n2, A,  B):
     p = next_prime(i)
-    F = GF(p^4, 'a')
+    Fn = GF(p^n2, 'a')
+    F = Fn.extension(n1, 'a1')
     E = EllipticCurve(F, [A, B])
     return [p, E, F]
 
@@ -72,7 +104,6 @@ def weil_descent_1(f, m, F):
         beta = beta + [k] 
         k = 0 
     return beta
-
 
 def summation_poly(k, R, A, B):
     F = R.base_ring()
@@ -184,76 +215,90 @@ def solve_groebner_basis(S, R):
     return solution      
 
 def factor_base(F, A, B):
-    E = EllipticCurve(F, [A, B])
-    n = F.degree()
+    Fn = F.base_ring()
+    n2 = Fn.degree()
     p = F.characteristic()
-    a = F.gens()[0]
-    F_base = F.base_ring()
-    factor_base = []
-    for i in range(p):
-        t = F(i**3 + A*x + B)
-        if F(t).nth_root(2) 
-
-
-
+    a = Fn.gens()[0]
+    factorbase = []
+    z = 0
+    if F(B).is_square() == 1:
+        t = F(B).nth_root(2)
+        P1 = (z, t)
+        factorbase += [P1]
+    
+    if n2 == 1:
+        for i in range(p^n2):
+            z = i*a
+            if F(z**3 + A*z + B).is_square() == 1:
+                t = F(z**3 + A*z + B).nth_root(2)
+                P1 = (z, t)
+                factorbase += [P1]
+    else:
+        for i in range(p^n2):
+            z = a**i
+            if F(z**3 + A*z + B).is_square() == 1:
+                t = F(z**3 + A*z + B).nth_root(2)
+                P1 = (z, t)
+                factorbase += [P1]           
+    return factorbase
 
 # eliptic curve discrete log computation using index calculus algorithm given by Gaudry.
-def relations(P, Q, F, k, A, B):
+def relations(P, Q, F, A, B):
     count = 0 #number of relations
-    relations = []
+    factorbase = factor_base(F, A, B)
+    s = len(factorbase)
+    print(s)
+    M = matrix(F, s+1, s)
+    a = matrix(F, s+1, 1)
+    b = matrix(F, s+1, 1)
     E = EllipticCurve(F, [A, B])
-    n = F.degree()
+    r = E.cardinality()
+    print(r)
+    Fn = F.base_ring()
+    n2 = Fn.degree()
+    n1 = F.degree()
     p = F.characteristic()
-    a = F.gens()[0]
-    R = PolynomialRing(F, 'x', k, order = 'lex')
-    f = summation_poly(k, R, A, B)
-    card = E.cardinality()
-    while (count <= p):
+    a = Fn.gens()[0]
+    R = PolynomialRing(F, 'x', n1+1, order = 'lex')
+    x = list(R.gens())
+    f = summation_poly(n1 + 1, R, A, B)
+    while (count < s+1):
+        u = randrange(r)
+        v = randrange(r)
+        R = u*E(P) + v*E(Q) 
+        t = x[:n1] + [R[0]]
+        f1 = f(t)
+        print(f1)
+        f1_esp = conversion_to_esp(f1, R)
+        print(f1_esp)
+        count = s+1
+
 
 
 
 #F = F_{q^n2}, q = p^n1(Finite Field) or number field or complex field.    
-n1 = input("insert the degree of the extension field.")
-n2 = input("insert the degree of the extension of the base field.")
-N = input("insert the size of the prime.")
-A, B = input("insert the parameters of required elliptic curve.")
-n = input("number of variables in the polynomial ring.")
-[p, E, F] = curve(N, n, A, B)
-Fn = GF(p^n2, 'a')
-F = Fn.extension(n1, 'a2')
-R = PolynomialRing(F, 'x', n, order = 'lex') 
-x = list(R.gens()) 
+n1 = 4
+#input("insert the degree of the extension field.")
+n2 = 1
+#input("insert the degree of the extension of the base field.")
+p = 1009
+F = GF(p^n1, 'a')
 a = F.gens()[0]
-R1 = PolynomialRing(F, 'x', 3, order = 'lex')
-P = (21*a^3 + 73*a^2 + 19*a + 24, 55*a^3 + 48*a^2 + 77*a + 82)
-card = E.cardinality()
-Q = (30*a^3 + a^2 + 38*a + 99, 56*a^3 + 43*a^2 + 4*a + 81)
+A, B = [529*a^3 + 210*a^2 + 379*a + 351, 636*a^3 + 595*a^2 + 7*a + 216]
+#input("insert the size of the prime.")
+#input("insert the parameters of required elliptic curve.")
+P = (748*a^3 + 600*a^2 + 187*a + 357, 322*a^3 + 347*a^2 + 734*a + 656)
+Q = (60*a^3 + 373*a^2 + 429*a + 954, 634*a^3 + 528*a^2 + 537*a + 145)
+relations(P, Q, F, A, B)
 
-(y0, y1) = R2.gens()
-f1 = f(y0, y1, xR)
-list_1 = weil_descent_1(f1, 2, F)
-# print(list_1)
-I = R2.ideal(list_1)
-print(I)
-solution = solve_grobner_basis(I, R2)
+#p = 1009, n1 = 4, n2 = 1, A = 529*a^3 + 210*a^2 + 379*a + 351, B = 636*a^3 + 595*a^2 + 7*a + 216, 
+#P = (748*a^3 + 600*a^2 + 187*a + 357 : 322*a^3 + 347*a^2 + 734*a + 656 : 1)
+#Q = (60*a^3 + 373*a^2 + 429*a + 954 : 634*a^3 + 528*a^2 + 537*a + 145 : 1), Q = a*P, a = 504988480210
 
 
 
 
 
-
-
-
-
-
-
-
-
-#f0 = x^2*y^2 + ( 40)*x^2*y + (15)*x^2 + (40)*x*y^2 + (-36)*x*y + (-23)*x + (15)*y^2 + (-23)*y + (-12)
-#f1 = (- 46)*x^2*y + (35)*x^2 + (- 46)*x*y^2 + (31)*x*y + (37)*x + (35)*y^2 + (37)*y + (9)
-#f2 = (- 32)*x^2*y + (- 21)*x^2 + (- 32)*x*y^2 + (42)*x*y + (- 5)*x + (- 21)*y^2 + (- 5)*y + (37)
-#f3 = (13)*x^2*y + (-21)*x^2 + (13)*x*y^2 + (42)*x*y + (-39)*x + (-21)*y^2 + (-39)*y + (26)
-#print([f0, f1, f2, f3])
 
 
 
